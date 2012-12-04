@@ -52,10 +52,10 @@ class View(object):
 
         NumberOfPlayers = int(raw_input('Please enter number of players '))
         NamesOfPlayers = []
-        n = 1
-        while n <= NumberOfPlayers :
-            NamesOfPlayers.append(raw_input('Player%d please enter your name ' %n))
-            n = n+1
+        for player in range(NumberOfPlayers):
+            player_name = raw_input('Player%d please enter your name ' %player)
+            NamesOfPlayers.append(player_name)
+
         return NamesOfPlayers,NumberOfPlayers
     @staticmethod
     def GenerateSymbols(NumberOfPlayers):
