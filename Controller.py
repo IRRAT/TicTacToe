@@ -2,119 +2,137 @@
 from Model import Model
 from View import View
 
+
 class Controller(object):
 
+
+    matches  =  3
+
+
+    class Player(object):
+        def __init__(self,Name):
+            self.Name = Name
+            self.Winner = False
+              # {(x1,y1):PlayerName}
+
+        def getName(self):
+            return self.Name
+
+        def isWinner(self):
+            return self.Winner
+
+
+    class Turner(object):
+        def __init__(self,PlayersList):
+            self.Players = PlayersList
+            self.CurentState = 0
+
+        def getNext(self):
+            Player = self.Players[self.CurentState]
+            if self.CurentState==len(self.Players)-1:
+                self.CurentState = 0
+            else :
+                self.CurentState = self.CurentState+1
+
+            return Player
+
     def __init__(self):
-        self.turn = 1  # 0- O, 1- X
-        self.Model = None
-        self.Winner = None
-
-
+        self.Players =[]
+        self.Model  =  Model()
+        self.intermediatePoints = {}
+#        self.Turner  = Controller.Turner()
 
     def run(self):
 
-        rows,lines = View.GreatingMessage()
-        self.Model = Model(lines,rows)
-        case = self.Model.get_win_case()
-        View.tablePrint(rows,lines,[],[])
+        self.rows,self.lines = View.GreatingMessage()
+
+        self.NamesOfPlayers,View.NumberOfPlayers = View.NamesOfPlayers() # intial Players from View
+
+        for name in self.NamesOfPlayers:
+            player = Controller.Player(name)
+            self.Players.append(player)
+
+
+
+
+
+
+
+        self.Turner  = Controller.Turner(self.Players)
+
+        View.Symbols = View.GenerateSymbols(View.NumberOfPlayers)
+        View.tablePrint(self.rows,self.lines,[])
 
         Win = False
 
         while not Win:
-
-
+            CurentPlayer = self.Turner.getNext()
+            print "Hello ", CurentPlayer.getName()
             x,y = View.InputMessage()
-            if not self.check_for_free((x,y)) or not self.Model.check_valid((x,y)):
 
+            if not self.ValidCoordinate((x,y)):
                 print "continue"
+                self.Turner.CurentState = self.Turner.CurentState - 1
                 continue
-            turn = self.whose_turn()
-            if turn == 0 :
-                self.Model.add_turnO((x,y))
-                    
-            if turn == 1 :
-                self.Model.add_turnX((x,y))
+            self.Model.setCordinate(CurentPlayer,(x,y))
+            mapp = self.Model.getMappingNotLinear()
+            View.tablePrint(self.lines,self.rows,mapp)
 
-
-            Xcord = self.Model.get_x_turn()
-            Ocord = self.Model.get_o_turn()
-            View.tablePrint(rows,lines,Xcord,Ocord)
-            Win = self.is_win((x,y))
+            Win = self.is_win(CurentPlayer,(x,y))
         
-            
+            pass
         View.WinMessage(Winner=self.Winner)
-        
 
 
-    def is_win(self,last_cordinate):
-        win_case = self.Model.get_win_case()
-        if self.turn == 0: # 1-O, 0- X
-            Xcords = self.Model.get_x_turn()
-            if last_cordinate in self.Model.getMidleX():
-                self.Winner = 1
-                return True
-            for cordinate in Xcords:
-                dist = self.distanse(cordinate,last_cordinate)
 
-                if dist ==  win_case or abs(dist-(2**0.5)*win_case)<0.0001:
-                    print "dist acepted  "
-                    middle_cell = self.calculate_middle_point(last_cordinate,cordinate)
-                    print "---middle cell",middle_cell
+    def is_win(self,Player,last_cordinate):
+        CordList = self.Model.getPlayerMap(Player)
+        if Player in self.intermediatePoints and last_cordinate in self.intermediatePoints[Player]:
+
+            self.Winner = Player.getName()
+            return True
+
+        for cordinate in CordList:
+            dist = self.distanse(cordinate,last_cordinate)
+
+            if dist ==  Controller.matches-1 or abs(dist-(2**0.5)*(Controller.matches-1))<0.0001:
+                print "dist acepted  "
+                innerPoint =   self.solver(last_cordinate,cordinate)
+                print "---sub cell",innerPoint
 
                     
-                    if middle_cell in Xcords:
-                        self.Winner = 1
-                        return True
-                    else:
-                        self.Model.addMidleX(middle_cell)
+                if innerPoint in CordList:
+                    self.Winner = Player.getName()
+                    return True
+                else:
+                    if Player in self.intermediatePoints:
+                        self.intermediatePoints[Player].append(innerPoint)
+                    else :
+                        self.intermediatePoints[Player] = [innerPoint]
 
-
-        if self.turn == 1: # 1-O, 0- X
-            Ocords = self.Model.get_o_turn()
-            if last_cordinate in self.Model.getMidleO():
-                self.Winner = 0
-                return True
-            for cordinate in Ocords:
-                dist = self.distanse(cordinate,last_cordinate)
-                print "dist ",dist
-                print "comparing: ",(2**0.5)*win_case,dist-(2**0.5)*win_case<0.0001
-
-                if dist ==  win_case or dist-(2**0.5)*win_case<0.01:
-                    middle_cell =  self.calculate_middle_point(last_cordinate,cordinate)
-                    print middle_cell
-                    if middle_cell in Ocords:
-                        self.Winner = 0
-                        return True
-                    else:
-                        self.Model.addMidleO(middle_cell)
-                    
-        self.Winner = 1
+        self.UpdatingInerPoint(last_cordinate)
         return False
+
+
+
+        
+    def ValidCoordinate(self, cordinate):
+        x,y = cordinate
+        if x> self.rows or y > self.lines or x<0 or  y<0:
+            View.ErrorMessageOut()
+            return False
+        if cordinate in self.Model.getMapping():
+            View.ErrorMessageFree()
+            return False
         return True
 
 
-    def whose_turn(self):
-        if self.turn == 0:
-            self.turn = 1
-            return 0
-        if self.turn == 1:
-            self.turn = 0
-            return 1
-        
-    def check_for_free(self, cordinate):
-        if self.Model.in_turnX(cordinate) or\
-                    self.Model.in_turnX(cordinate):
-            return False
-        else:
-            return True
-                    
-    def calculate_middle_point(self,head,tail):
+    def solver(self,head,tail):
         X,Y = head 
         x,y = tail
         if X<x:
             x,X = X,x
             y,Y = Y,y
-
         middle_points = None
         for i in range(x,X+1):
       
@@ -124,9 +142,17 @@ class Controller(object):
 
         return middle_points
 
+
     def distanse(self,start_cord, end_cord):
         dist =  ((end_cord[0]-start_cord[0])**2+(end_cord[1]-start_cord[1])**2)**0.5
         return dist
+
+
+    def UpdatingInerPoint(self,CoordTuple):
+        for Player in self.intermediatePoints:
+            for pair in self.intermediatePoints[Player]:
+                if CoordTuple==pair:
+                    self.intermediatePoints[Player].remove(pair)
 
 
 
