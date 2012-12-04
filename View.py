@@ -1,19 +1,19 @@
 class View(object):
+    NumberOfPlayers = 0
+    Symbols = []
+
+
+
 
     @staticmethod
-    def tablePrint(n,m,Xcoordinates,Ocoordinates):
-        print Xcoordinates,Ocoordinates
+    def tablePrint(n,m,mapp):
+
         table = [[" " for i in range(n)]for j in range(m)]
-        for tupleCord in Xcoordinates:
-            i,j = tupleCord
-            print i,j
-            table[i][j] = "X"
-        for tupleCord in Ocoordinates:
 
-            i,j = tupleCord
-            print i,j
-            table[i][j] = "O"
-
+        for i, ListCoord in enumerate(mapp):
+            for pair in ListCoord:
+                x,y = pair
+                table[x][y] = View.Symbols[i]
 
         for lines in table:
             print lines
@@ -21,30 +21,8 @@ class View(object):
 
     @staticmethod
     def GreatingMessage():
-        CheckTibleSize = False
-        print """
-       (                                            )       
-  *   ))\ )  (      *   )   (       (      *   ) ( /(       
-` )  /(()/(  )\   ` )  /(   )\      )\   ` )  /( )\()) (    
- ( )(_))(_)|((_)   ( )(_)|(((_)(  (((_)   ( )(_)|(_)\  )\   
-(_(_()|_)) )\___  (_(_()) )\ _ )\ )\___  (_(_())  ((_)((_)  
-|_   _|_ _((/ __| |_   _| (_)_\(_|(/ __| |_   _| / _ \| __| 
-  | |  | | | (__    | |    / _ \  | (__    | |  | (_) | _|  
-  |_| |___| \___|   |_|   /_/ \_\  \___|   |_|   \___/|___| 
-                                                            
-                                                                                   
-"""
-        while CheckTibleSize == False:
-            rows = int(raw_input(" \nplease input rows Number: "))
-            lines = int(raw_input("please input lines Number: "))
-            if rows < 3 or lines < 3 :
-                print "\nERROR: number of rows and lines must be bigger than 2"
-                continue
-            CheckTibleSize = True
-            
-            
-        
-       
+        rows = int(raw_input(" please input rows Number "))
+        lines = int(raw_input(" please input lines Number "))
         return rows,lines
 
 
@@ -59,14 +37,7 @@ class View(object):
     @staticmethod
     def WinMessage(Winner = None):
         if Winner is not None:
-            if Winner == 1:
-                Winner = "X"
-            else :
-                Winner = "O"
-            
-            
-            
-            print "Winnner is %s "%(Winner,)
+            print "Winnner mesaage for %s "%(Winner,)
 
     @staticmethod
     def ErrorMessageOut():
@@ -76,4 +47,23 @@ class View(object):
     def ErrorMessageFree():
         print " Cell is no free "
 
-    
+    @staticmethod
+    def NamesOfPlayers():
+
+        NumberOfPlayers = int(raw_input('Please enter number of players '))
+        NamesOfPlayers = []
+        n = 1
+        while n <= NumberOfPlayers :
+            NamesOfPlayers.append(raw_input('Player%d please enter your name ' %n))
+            n = n+1
+        return NamesOfPlayers,NumberOfPlayers
+    @staticmethod
+    def GenerateSymbols(NumberOfPlayers):
+
+        Symbols = [chr(97+n) for n in range(NumberOfPlayers)]
+        return Symbols
+
+
+
+
+
